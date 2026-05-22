@@ -9,6 +9,14 @@ import { Phone, TrendingUp, DollarSign, ClipboardList } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
+type EntryRow = {
+  disease: string
+  leadsCount: number
+  convertedCount: number
+  revenueGenerated: number
+  consultationType: string
+}
+
 async function getTodayEntry(telecallerId: string) {
   await connectDB()
   return DailyEntry.findOne({ telecallerId, date: todayString() }).lean()
@@ -18,9 +26,9 @@ export default async function TelecallerDashboard() {
   const session = await getServerSession(authOptions)
   const entry = await getTodayEntry(session!.user.id)
 
-  const totalLeads     = entry?.entries?.reduce((s: number, e) => s + (e.leadsCount      ?? 0), 0) ?? 0
-  const totalConverted = entry?.entries?.reduce((s: number, e) => s + (e.convertedCount  ?? 0), 0) ?? 0
-  const totalRevenue   = entry?.entries?.reduce((s: number, e) => s + ((e as any).revenueGenerated ?? 0), 0) ?? 0
+  const totalLeads     = entry?.entries?.reduce((s: number, e: EntryRow) => s + (e.leadsCount      ?? 0), 0) ?? 0
+  const totalConverted = entry?.entries?.reduce((s: number, e: EntryRow) => s + (e.convertedCount  ?? 0), 0) ?? 0
+  const totalRevenue   = entry?.entries?.reduce((s: number, e: EntryRow) => s + (e.revenueGenerated ?? 0), 0) ?? 0
   const cr = conversionRate(totalConverted, totalLeads)
   const filled = !!entry
 
@@ -41,7 +49,7 @@ export default async function TelecallerDashboard() {
           </div>
           <div>
             <p className={`font-semibold ${filled ? 'text-green-800' : 'text-amber-800'}`}>
-              {filled ? "Today's data submitted" : "Today's data not filled yet"}
+              {filled ? "Today&apos;s data submitted" : "Today&apos;s data not filled yet"}
             </p>
             <p className={`text-sm ${filled ? 'text-green-600' : 'text-amber-600'}`}>
               {filled
@@ -104,15 +112,15 @@ export default async function TelecallerDashboard() {
         </Link>
         <div className="bg-white border border-gray-100 rounded-xl p-5">
           <div className="text-2xl mb-2">📊</div>
-          <p className="font-semibold text-gray-800 mb-2">Today's breakdown</p>
+          <p className="font-semibold text-gray-800 mb-2">Today&apos;s breakdown</p>
           {filled && entry!.entries.length > 0 ? (
             <div className="space-y-1.5">
-              {entry!.entries.slice(0, 4).map((e, i) => (
+              {entry!.entries.slice(0, 4).map((e: EntryRow, i: number) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="text-gray-500 truncate max-w-[120px]">{e.disease}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`px-1.5 py-0.5 rounded text-xs ${(e as any).consultationType === 'online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                      {(e as any).consultationType === 'online' ? '💻' : '🏥'}
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${e.consultationType === 'online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                      {e.consultationType === 'online' ? '💻' : '🏥'}
                     </span>
                     <span className="font-semibold text-gray-700">{e.leadsCount}</span>
                   </div>
