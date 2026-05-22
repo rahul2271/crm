@@ -17,9 +17,16 @@ type EntryRow = {
   consultationType: string
 }
 
-async function getTodayEntry(telecallerId: string) {
+type TodayEntry = {
+  totalLeadsGiven: number
+  entries: EntryRow[]
+}
+
+async function getTodayEntry(telecallerId: string): Promise<TodayEntry | null> {
   await connectDB()
-  return DailyEntry.findOne({ telecallerId, date: todayString() }).lean()
+  const result = await DailyEntry.findOne({ telecallerId, date: todayString() }).lean()
+  if (!result || Array.isArray(result)) return null
+  return result as unknown as TodayEntry
 }
 
 export default async function TelecallerDashboard() {
@@ -41,7 +48,6 @@ export default async function TelecallerDashboard() {
         <p className="text-sm text-gray-500 mt-1">{formatDate(new Date())}</p>
       </div>
 
-      {/* Today's fill status banner */}
       <div className={`rounded-xl p-5 mb-6 flex items-center justify-between ${filled ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${filled ? 'bg-green-100' : 'bg-amber-100'}`}>
@@ -49,7 +55,7 @@ export default async function TelecallerDashboard() {
           </div>
           <div>
             <p className={`font-semibold ${filled ? 'text-green-800' : 'text-amber-800'}`}>
-              {filled ? "Today&apos;s data submitted" : "Today&apos;s data not filled yet"}
+              {filled ? "Today's data submitted" : "Today's data not filled yet"}
             </p>
             <p className={`text-sm ${filled ? 'text-green-600' : 'text-amber-600'}`}>
               {filled
@@ -64,41 +70,15 @@ export default async function TelecallerDashboard() {
         </Link>
       </div>
 
-      {/* Stats — only if filled today */}
       {filled && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            label="Leads given"
-            value={entry!.totalLeadsGiven}
-            sub="assigned today"
-            icon={<Phone size={18} />}
-            color="teal"
-          />
-          <StatCard
-            label="Leads worked"
-            value={totalLeads}
-            sub={`${entry!.entries.length} disease rows`}
-            icon={<ClipboardList size={18} />}
-            color="blue"
-          />
-          <StatCard
-            label="Converted"
-            value={totalConverted}
-            sub={`${cr}% rate`}
-            icon={<TrendingUp size={18} />}
-            color="green"
-          />
-          <StatCard
-            label="Revenue today"
-            value={formatCurrency(totalRevenue)}
-            sub="from conversions"
-            icon={<DollarSign size={18} />}
-            color="purple"
-          />
+          <StatCard label="Leads given"   value={entry!.totalLeadsGiven}       sub="assigned today"                   icon={<Phone size={18} />}       color="teal"   />
+          <StatCard label="Leads worked"  value={totalLeads}                    sub={`${entry!.entries.length} rows`}  icon={<ClipboardList size={18} />} color="blue"   />
+          <StatCard label="Converted"     value={totalConverted}                sub={`${cr}% rate`}                    icon={<TrendingUp size={18} />}   color="green"  />
+          <StatCard label="Revenue today" value={formatCurrency(totalRevenue)}  sub="from conversions"                 icon={<DollarSign size={18} />}   color="purple" />
         </div>
       )}
 
-      {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Link href="/entry" className="bg-brand-600 hover:bg-brand-700 text-white rounded-xl p-5 transition-all">
           <div className="text-2xl mb-2">📋</div>
