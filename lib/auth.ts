@@ -4,6 +4,14 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from './mongodb'
 import { User } from '@/models/User'
 
+type UserDoc = {
+  _id: unknown
+  name: string
+  email: string
+  password: string
+  role: string
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -16,11 +24,11 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) throw new Error('Email and password required')
         await connectDB()
         const user = await User.findOne({ email: credentials.email.toLowerCase(), isActive: true })
-          .select('+password').lean()
+          .select('+password').lean() as UserDoc | null
         if (!user) throw new Error('No account found with this email')
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) throw new Error('Incorrect password')
-        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role }
+        return { id: String(user._id), name: user.name, email: user.email, role: user.role }
       },
     }),
   ],
