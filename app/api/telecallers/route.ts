@@ -29,9 +29,9 @@ export async function GET() {
     },
   ])
 
-  const map = new Map(stats.map(s => [s._id.toString(), s]))
+  const map = new Map(stats.map(s => [String(s._id), s]))
   const result = telecallers.map(t => {
-    const s = map.get(t._id.toString())
+    const s = map.get(String(t._id))
     return {
       ...t,
       totalLeadsGiven: s?.totalLeadsGiven ?? 0,
