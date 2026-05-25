@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb'
 import { DailyEntry } from '@/models/DailyEntry'
 import { StatCard } from '@/components/ui'
 import { formatDate, conversionRate, todayString, formatCurrency } from '@/lib/utils'
+import { CONSULT_OPTIONS } from '@/types'
 import Link from 'next/link'
 import { Phone, TrendingUp, DollarSign, ClipboardList } from 'lucide-react'
 
@@ -48,6 +49,7 @@ export default async function TelecallerDashboard() {
         <p className="text-sm text-gray-500 mt-1">{formatDate(new Date())}</p>
       </div>
 
+      {/* Status banner */}
       <div className={`rounded-xl p-5 mb-6 flex items-center justify-between ${filled ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${filled ? 'bg-green-100' : 'bg-amber-100'}`}>
@@ -70,15 +72,17 @@ export default async function TelecallerDashboard() {
         </Link>
       </div>
 
+      {/* Stats */}
       {filled && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Leads given"   value={entry!.totalLeadsGiven}       sub="assigned today"                   icon={<Phone size={18} />}       color="teal"   />
+          <StatCard label="Leads given"   value={entry!.totalLeadsGiven}       sub="assigned today"                   icon={<Phone size={18} />}        color="teal"   />
           <StatCard label="Leads worked"  value={totalLeads}                    sub={`${entry!.entries.length} rows`}  icon={<ClipboardList size={18} />} color="blue"   />
-          <StatCard label="Converted"     value={totalConverted}                sub={`${cr}% rate`}                    icon={<TrendingUp size={18} />}   color="green"  />
-          <StatCard label="Revenue today" value={formatCurrency(totalRevenue)}  sub="from conversions"                 icon={<DollarSign size={18} />}   color="purple" />
+          <StatCard label="Converted"     value={totalConverted}                sub={`${cr}% rate`}                    icon={<TrendingUp size={18} />}    color="green"  />
+          <StatCard label="Revenue today" value={formatCurrency(totalRevenue)}  sub="from conversions"                 icon={<DollarSign size={18} />}    color="purple" />
         </div>
       )}
 
+      {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Link href="/entry" className="bg-brand-600 hover:bg-brand-700 text-white rounded-xl p-5 transition-all">
           <div className="text-2xl mb-2">📋</div>
@@ -90,23 +94,30 @@ export default async function TelecallerDashboard() {
           <p className="font-semibold text-gray-800">My history</p>
           <p className="text-gray-400 text-sm mt-0.5">All past submissions</p>
         </Link>
+
+        {/* Today's breakdown — fixed to show correct consultation type label */}
         <div className="bg-white border border-gray-100 rounded-xl p-5">
           <div className="text-2xl mb-2">📊</div>
           <p className="font-semibold text-gray-800 mb-2">Today&apos;s breakdown</p>
           {filled && entry!.entries.length > 0 ? (
             <div className="space-y-1.5">
-              {entry!.entries.slice(0, 4).map((e: EntryRow, i: number) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 truncate max-w-[120px]">{e.disease}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-1.5 py-0.5 rounded text-xs ${e.consultationType === 'online' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                      {e.consultationType === 'online' ? '💻' : '🏥'}
-                    </span>
-                    <span className="font-semibold text-gray-700">{e.leadsCount}</span>
+              {entry!.entries.slice(0, 4).map((e: EntryRow, i: number) => {
+                const opt = CONSULT_OPTIONS.find(o => o.value === e.consultationType)
+                return (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600 truncate max-w-[110px]">{e.disease}</span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${opt?.color ?? 'bg-gray-100 text-gray-600'}`}>
+                        {opt?.icon} {opt?.label ?? e.consultationType}
+                      </span>
+                      <span className="font-semibold text-gray-700">{e.leadsCount}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {entry!.entries.length > 4 && <p className="text-xs text-gray-400">+{entry!.entries.length - 4} more rows</p>}
+                )
+              })}
+              {entry!.entries.length > 4 && (
+                <p className="text-xs text-gray-400">+{entry!.entries.length - 4} more rows</p>
+              )}
             </div>
           ) : (
             <p className="text-gray-400 text-sm">No data yet today</p>

@@ -1,18 +1,19 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts'
+import { PieChart, Pie, Cell, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { StatCard, Card } from '@/components/ui'
 import { formatNumber, formatPercent, formatCurrency } from '@/lib/utils'
-import { Phone, TrendingUp, Users, DollarSign, Monitor, Building2, BarChart2 } from 'lucide-react'
+import { CONSULT_OPTIONS } from '@/types'
+import { Phone, TrendingUp, Users, DollarSign, BarChart2 } from 'lucide-react'
 
 const COLORS = ['#0d9488','#14b8a6','#2dd4bf','#5eead4','#99f6e0','#0f766e','#134e4a','#0891b2']
 
 export default function AdminDashboard() {
-  const [overview,  setOverview]  = useState<any>(null)
-  const [diseases,  setDiseases]  = useState<any[]>([])
-  const [trend,     setTrend]     = useState<any[]>([])
-  const [consult,   setConsult]   = useState<any[]>([])
-  const [loading,   setLoading]   = useState(true)
+  const [overview, setOverview] = useState<any>(null)
+  const [diseases, setDiseases] = useState<any[]>([])
+  const [trend,    setTrend]    = useState<any[]>([])
+  const [consult,  setConsult]  = useState<any[]>([])
+  const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
     const last30 = new Date(); last30.setDate(last30.getDate() - 30)
@@ -36,9 +37,6 @@ export default function AdminDashboard() {
     </div>
   )
 
-  const onlineData  = consult.find((c: any) => c.consultationType === 'online')
-  const hospitalData = consult.find((c: any) => c.consultationType === 'hospital')
-
   return (
     <div>
       <div className="mb-6">
@@ -46,52 +44,60 @@ export default function AdminDashboard() {
         <p className="text-sm text-gray-500 mt-1">All-time performance across all telecallers</p>
       </div>
 
-      {/* KPIs row 1 */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <StatCard label="Total leads given"  value={formatNumber(overview?.totalLeadsGiven ?? 0)}   sub="assigned to team"                       icon={<Phone size={18}/>}      color="teal"   />
-        <StatCard label="Leads worked"       value={formatNumber(overview?.totalLeads ?? 0)}        sub="across all disease rows"                icon={<Users size={18}/>}      color="blue"   />
-        <StatCard label="Converted"          value={formatNumber(overview?.totalConverted ?? 0)}    sub={`${formatPercent(overview?.conversionRate ?? 0)} conversion`} icon={<TrendingUp size={18}/>} color="green"  />
-        <StatCard label="Total revenue"      value={formatCurrency(overview?.totalRevenue ?? 0)}    sub="from all conversions"                   icon={<DollarSign size={18}/>} color="purple" />
+        <StatCard label="Total leads given" value={formatNumber(overview?.totalLeadsGiven ?? 0)} sub="assigned to team"       icon={<Phone size={18}/>}      color="teal"   />
+        <StatCard label="Leads worked"      value={formatNumber(overview?.totalLeads ?? 0)}      sub="across all rows"        icon={<Users size={18}/>}      color="blue"   />
+        <StatCard label="Converted"         value={formatNumber(overview?.totalConverted ?? 0)}  sub={`${formatPercent(overview?.conversionRate ?? 0)} rate`} icon={<TrendingUp size={18}/>} color="green" />
+        <StatCard label="Total revenue"     value={formatCurrency(overview?.totalRevenue ?? 0)}  sub="from all conversions"   icon={<DollarSign size={18}/>} color="purple" />
       </div>
-
-      {/* KPIs row 2 */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Avg rev / conversion" value={formatCurrency(overview?.avgRevenuePerConversion ?? 0)} sub="per converted lead"  icon={<BarChart2 size={18}/>} color="orange" />
-        <StatCard label="Active telecallers"   value={overview?.activeTelecallers ?? 0}                       sub="team members"        icon={<Users size={18}/>}    color="teal"   />
-        <StatCard label="Online leads"         value={formatNumber(overview?.totalOnlineLeads ?? 0)}           sub="consultation rows"   icon={<Monitor size={18}/>}  color="blue"   />
-        <StatCard label="Hospital visits"      value={formatNumber(overview?.totalHospitalLeads ?? 0)}         sub="visit rows"          icon={<Building2 size={18}/>} color="orange" />
+        <StatCard label="Avg rev / conv"    value={formatCurrency(overview?.avgRevenuePerConversion ?? 0)} sub="per converted lead" icon={<BarChart2 size={18}/>} color="orange" />
+        <StatCard label="Active telecallers" value={overview?.activeTelecallers ?? 0}                       sub="team members"       icon={<Users size={18}/>}    color="teal"   />
       </div>
 
-      {/* Consultation split */}
+      {/* ── Consultation type split — all 4 types ── */}
       {consult.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {[onlineData, hospitalData].filter(Boolean).map((c: any) => (
-            <div key={c.consultationType}
-              className={`rounded-xl p-5 flex items-center justify-between border ${c.consultationType === 'online' ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'}`}>
-              <div className="flex items-center gap-4">
-                <span className="text-3xl">{c.consultationType === 'online' ? '💻' : '🏥'}</span>
-                <div>
-                  <p className={`font-semibold ${c.consultationType === 'online' ? 'text-blue-800' : 'text-orange-800'}`}>
-                    {c.consultationType === 'online' ? 'Online consultations' : 'Hospital visits'}
-                  </p>
-                  <p className={`text-sm ${c.consultationType === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {formatNumber(c.totalLeads)} leads · {c.totalConverted} converted
-                  </p>
+        <div className={`grid gap-4 mb-6 ${consult.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
+          {consult.map((c: any) => {
+            const opt = CONSULT_OPTIONS.find(o => o.value === c.consultationType)
+            // Derive Tailwind classes from opt.color (bg-xxx-100 text-xxx-700)
+            const bgBorder = opt?.value === 'online'   ? 'bg-blue-50 border-blue-100'
+                           : opt?.value === 'hospital' ? 'bg-orange-50 border-orange-100'
+                           : opt?.value === 'whatsapp' ? 'bg-green-50 border-green-100'
+                           : 'bg-purple-50 border-purple-100'
+            const textTitle = opt?.value === 'online'   ? 'text-blue-800'
+                            : opt?.value === 'hospital' ? 'text-orange-800'
+                            : opt?.value === 'whatsapp' ? 'text-green-800'
+                            : 'text-purple-800'
+            const textSub = opt?.value === 'online'   ? 'text-blue-600'
+                          : opt?.value === 'hospital' ? 'text-orange-600'
+                          : opt?.value === 'whatsapp' ? 'text-green-600'
+                          : 'text-purple-600'
+            const textRev = opt?.value === 'online'   ? 'text-blue-700'
+                          : opt?.value === 'hospital' ? 'text-orange-700'
+                          : opt?.value === 'whatsapp' ? 'text-green-700'
+                          : 'text-purple-700'
+            return (
+              <div key={c.consultationType} className={`rounded-xl p-4 flex items-center justify-between border ${bgBorder}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{opt?.icon ?? '📋'}</span>
+                  <div>
+                    <p className={`font-semibold text-sm ${textTitle}`}>{opt?.label ?? c.consultationType}</p>
+                    <p className={`text-xs mt-0.5 ${textSub}`}>
+                      {formatNumber(c.totalLeads)} leads · {c.totalConverted} converted
+                    </p>
+                  </div>
                 </div>
+                <p className={`text-xl font-bold ${textRev}`}>{formatCurrency(c.totalRevenue)}</p>
               </div>
-              <div className="text-right">
-                <p className={`text-2xl font-bold ${c.consultationType === 'online' ? 'text-blue-700' : 'text-orange-700'}`}>
-                  {formatCurrency(c.totalRevenue)}
-                </p>
-                <p className={`text-xs ${c.consultationType === 'online' ? 'text-blue-500' : 'text-orange-500'}`}>revenue</p>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Revenue + leads trend */}
+        {/* Revenue trend */}
         <Card title="Revenue & leads — last 30 days">
           <div className="p-4">
             {trend.length === 0
@@ -105,9 +111,9 @@ export default function AdminDashboard() {
                     <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
                       formatter={(v: any, name: string) => [name === 'Revenue' ? formatCurrency(v) : v, name]} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line yAxisId="l" type="monotone" dataKey="totalRevenue"   name="Revenue"    stroke="#0d9488" strokeWidth={2} dot={false} />
-                    <Line yAxisId="r" type="monotone" dataKey="totalLeads"     name="Leads"      stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
-                    <Line yAxisId="r" type="monotone" dataKey="totalConverted" name="Converted"  stroke="#5eead4" strokeWidth={1.5} dot={false} />
+                    <Line yAxisId="l" type="monotone" dataKey="totalRevenue"   name="Revenue"   stroke="#0d9488" strokeWidth={2} dot={false} />
+                    <Line yAxisId="r" type="monotone" dataKey="totalLeads"     name="Leads"     stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
+                    <Line yAxisId="r" type="monotone" dataKey="totalConverted" name="Converted" stroke="#5eead4" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
             }
@@ -134,20 +140,20 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Disease table with financials */}
+      {/* Disease table */}
       <Card title="Disease-wise performance & revenue">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                {['Disease', 'Total leads', 'Converted', 'Conv. rate', 'Online', 'Hospital', 'Revenue', 'Avg / conv.'].map(h => (
+                {['Disease', 'Total leads', 'Converted', 'Conv. rate', 'Revenue', 'Avg / conv.'].map(h => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {diseases.length === 0
-                ? <tr><td colSpan={8} className="text-center py-10 text-gray-400 text-sm">No data yet</td></tr>
+                ? <tr><td colSpan={6} className="text-center py-10 text-gray-400 text-sm">No data yet</td></tr>
                 : diseases.map((d: any) => (
                     <tr key={d.disease} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-gray-900">{d.disease}</td>
@@ -158,8 +164,6 @@ export default function AdminDashboard() {
                           {formatPercent(d.conversionRate)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-blue-600">{d.onlineLeads}</td>
-                      <td className="px-4 py-3 text-orange-600">{d.hospitalLeads}</td>
                       <td className="px-4 py-3 font-semibold text-brand-700">{formatCurrency(d.totalRevenue)}</td>
                       <td className="px-4 py-3 text-gray-500">{formatCurrency(d.avgRevenue)}</td>
                     </tr>
