@@ -5,8 +5,11 @@ import { Button, Input, Badge } from '@/components/ui'
 
 interface Disease { _id: string; name: string; category: string; isActive: boolean }
 
-const SUGGESTED_CATEGORIES = [
-  
+const SUGGESTED_CATEGORIES: string[] = [
+  'Digestive Disorders','Pain Management','Auto-Immune Disorders','Skin Disorders',
+  'Respiratory Disorders','Liver Disorders','Metabolic Disorders','Cardiac Disorders',
+  'Renal Disorders','Reproductive Disorders',
+  'Neurology','Oncology','Psychiatry','Ophthalmology','General Medicine',
 ]
 
 export default function DiseasesPage() {
