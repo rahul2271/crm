@@ -7,6 +7,7 @@ import {
 } from 'recharts'
 import { Card } from '@/components/ui'
 import { formatPercent, formatCurrency, formatNumber, INDIAN_STATES, AGE_GROUPS } from '@/lib/utils'
+import { CONSULT_OPTIONS } from '@/types'
 import { format, subDays, startOfWeek, startOfMonth } from 'date-fns'
 import { TrendingUp, TrendingDown, Minus, ChevronRight, X } from 'lucide-react'
 
@@ -236,19 +237,23 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
-          {/* Consultation type split */}
+          {/* Consultation type split — all 4 types */}
           {consultStats.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
-              {consultStats.map((c:any) => (
-                <div key={c.consultationType}
-                  className={`rounded-xl border p-4 flex items-center justify-between ${c.consultationType==='online' ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'}`}>
-                  <div>
-                    <p className="font-semibold text-gray-800">{c.consultationType==='online' ? '💻 Online' : '🏥 Hospital'}</p>
-                    <p className="text-sm text-gray-500 mt-0.5">{formatNumber(c.totalLeads)} leads · {c.totalConverted} converted · {formatPercent(c.conversionRate)} rate</p>
+            <div className={`grid gap-4 ${consultStats.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
+              {consultStats.map((c:any) => {
+                const opt = CONSULT_OPTIONS.find(o => o.value === c.consultationType)
+                const bg  = opt?.value==='online'?'bg-blue-50 border-blue-100':opt?.value==='hospital'?'bg-orange-50 border-orange-100':opt?.value==='whatsapp'?'bg-green-50 border-green-100':'bg-purple-50 border-purple-100'
+                const rev = opt?.value==='online'?'text-blue-700':opt?.value==='hospital'?'text-orange-700':opt?.value==='whatsapp'?'text-green-700':'text-purple-700'
+                return (
+                  <div key={c.consultationType} className={`rounded-xl border p-4 flex items-center justify-between ${bg}`}>
+                    <div>
+                      <p className="font-semibold text-gray-800">{opt?.icon} {opt?.label ?? c.consultationType}</p>
+                      <p className="text-sm text-gray-500 mt-0.5">{formatNumber(c.totalLeads)} leads · {c.totalConverted} converted · {formatPercent(c.conversionRate)} rate</p>
+                    </div>
+                    <p className={`text-xl font-bold ${rev}`}>{formatCurrency(c.totalRevenue)}</p>
                   </div>
-                  <p className={`text-xl font-bold ${c.consultationType==='online' ? 'text-blue-700' : 'text-orange-700'}`}>{formatCurrency(c.totalRevenue)}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
