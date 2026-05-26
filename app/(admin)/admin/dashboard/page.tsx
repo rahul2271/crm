@@ -389,43 +389,71 @@ export default function AdminDashboard() {
               </div>
             </Card>
 
-            {/* Disease pie — NO inline labels, uses Legend for all diseases */}
-            <Card title="Disease distribution" subtitle="Hover for details · all diseases shown in legend">
+            {/* Disease pie — groups tiny slices into Others, % labels on visible slices */}
+            <Card title="Disease distribution" subtitle="Slices under 2% grouped as Others · hover for details">
               <div className="p-4">
                 {diseases.length === 0
                   ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data yet</div>
-                  : <ResponsiveContainer width="100%" height={280}>
-                      <PieChart>
-                        <Pie
-                          data={diseases}
-                          dataKey="totalLeads"
-                          nameKey="disease"
-                          cx="50%"
-                          cy="42%"
-                          outerRadius={90}
-                          label={false}
-                          labelLine={false}
-                        >
-                          {diseases.map((_: any, i: number) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
-                          formatter={(v: any, _: any, props: any) => [
-                            `${v} leads · ${formatCurrency(props.payload.totalRevenue)} · ${props.payload.conversionRate}% conv`,
-                            props.payload.disease
-                          ]}
-                        />
-                        <Legend
-                          layout="horizontal"
-                          verticalAlign="bottom"
-                          align="center"
-                          wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
-                          formatter={(value: string) => value.length > 18 ? value.slice(0, 18) + '…' : value}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  : (() => {
+                      const total = diseases.reduce((s: number, d: any) => s + d.totalLeads, 0)
+                      // Separate meaningful slices (≥2%) from tiny ones
+                      const big    = diseases.filter((d: any) => d.totalLeads / total >= 0.02)
+                      const small  = diseases.filter((d: any) => d.totalLeads / total <  0.02)
+                      const othersLeads = small.reduce((s: number, d: any) => s + d.totalLeads, 0)
+                      const othersRev   = small.reduce((s: number, d: any) => s + d.totalRevenue, 0)
+                      const pieData = othersLeads > 0
+                        ? [...big, { disease: `Others (${small.length})`, totalLeads: othersLeads, totalRevenue: othersRev, conversionRate: 0, avgRevenue: 0 }]
+                        : big
+
+                      const CUSTOM_LABEL = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
+                        if (percent < 0.04) return null
+                        const RADIAN = Math.PI / 180
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.55
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                        return (
+                          <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
+                            style={{ fontSize: 11, fontWeight: 600 }}>
+                            {(percent * 100).toFixed(0)}%
+                          </text>
+                        )
+                      }
+
+                      return (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              dataKey="totalLeads"
+                              nameKey="disease"
+                              cx="50%"
+                              cy="44%"
+                              outerRadius={100}
+                              labelLine={false}
+                              label={CUSTOM_LABEL}
+                            >
+                              {pieData.map((_: any, i: number) => (
+                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
+                              formatter={(v: any, _: any, props: any) => {
+                                const pct = total > 0 ? ((props.payload.totalLeads / total) * 100).toFixed(1) : '0'
+                                return [`${v} leads (${pct}%) · ${formatCurrency(props.payload.totalRevenue)}`, props.payload.disease]
+                              }}
+                            />
+                            <Legend
+                              layout="horizontal"
+                              verticalAlign="bottom"
+                              align="center"
+                              wrapperStyle={{ fontSize: 10, paddingTop: 6 }}
+                              formatter={(value: string) => value.length > 20 ? value.slice(0, 20) + '…' : value}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )
+                    })()
                 }
               </div>
             </Card>
