@@ -1,224 +1,402 @@
+// 'use client'
+// import { useEffect, useState } from 'react'
+// import { PieChart, Pie, Cell, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+// import { StatCard, Card } from '@/components/ui'
+// import { formatNumber, formatPercent, formatCurrency } from '@/lib/utils'
+// import { CONSULT_OPTIONS } from '@/types'
+// import { Phone, TrendingUp, Users, DollarSign, BarChart2 } from 'lucide-react'
+// import { format, subDays, startOfWeek, startOfMonth } from 'date-fns'
+
+// const COLORS = ['#0d9488','#14b8a6','#2dd4bf','#5eead4','#99f6e0','#0f766e','#134e4a','#0891b2']
+// const today = new Date()
+
+// const PRESETS = [
+//   { label: 'Today',        from: format(today,'yyyy-MM-dd'),                                    to: format(today,'yyyy-MM-dd') },
+//   { label: 'Yesterday',    from: format(subDays(today,1),'yyyy-MM-dd'),                         to: format(subDays(today,1),'yyyy-MM-dd') },
+//   { label: 'This week',    from: format(startOfWeek(today,{weekStartsOn:1}),'yyyy-MM-dd'),       to: format(today,'yyyy-MM-dd') },
+//   { label: 'This month',   from: format(startOfMonth(today),'yyyy-MM-dd'),                      to: format(today,'yyyy-MM-dd') },
+//   { label: 'Last 30 days', from: format(subDays(today,29),'yyyy-MM-dd'),                        to: format(today,'yyyy-MM-dd') },
+//   { label: 'All time',     from: '',                                                             to: '' },
+// ]
+
+// export default function AdminDashboard() {
+//   const [activePreset, setActivePreset] = useState('All time')
+//   const [dateFrom,     setDateFrom]     = useState('')
+//   const [dateTo,       setDateTo]       = useState('')
+//   const [overview,     setOverview]     = useState<any>(null)
+//   const [diseases,     setDiseases]     = useState<any[]>([])
+//   const [trend,        setTrend]        = useState<any[]>([])
+//   const [consult,      setConsult]      = useState<any[]>([])
+//   const [loading,      setLoading]      = useState(true)
+
+//   function buildQS(from: string, to: string) {
+//     const p = new URLSearchParams()
+//     if (from) p.set('dateFrom', from)
+//     if (to)   p.set('dateTo', to)
+//     return p.toString()
+//   }
+
+//   function fetchAll(from = dateFrom, to = dateTo) {
+//     setLoading(true)
+//     const qs = buildQS(from, to)
+//     // For trend, use the selected range or last 30 days as fallback
+//     const trendFrom = from || format(subDays(today, 29), 'yyyy-MM-dd')
+//     const trendQs   = buildQS(trendFrom, to || format(today, 'yyyy-MM-dd'))
+//     Promise.all([
+//       fetch(`/api/analytics?type=overview&${qs}`).then(r => r.json()),
+//       fetch(`/api/analytics?type=disease&${qs}`).then(r => r.json()),
+//       fetch(`/api/analytics?type=trend&${trendQs}`).then(r => r.json()),
+//       fetch(`/api/analytics?type=consultationType&${qs}`).then(r => r.json()),
+//     ]).then(([ov, dis, tr, ct]) => {
+//       setOverview(ov.data)
+//       setDiseases((dis.data ?? []).slice(0, 8))
+//       setTrend(tr.data ?? [])
+//       setConsult(ct.data ?? [])
+//     }).finally(() => setLoading(false))
+//   }
+
+//   useEffect(() => { fetchAll() }, []) // eslint-disable-line
+
+//   function applyPreset(p: typeof PRESETS[0]) {
+//     setActivePreset(p.label)
+//     setDateFrom(p.from)
+//     setDateTo(p.to)
+//     fetchAll(p.from, p.to)
+//   }
+
+//   return (
+//     <div>
+//       <div className="mb-5">
+//         <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
+//         <p className="text-sm text-gray-500 mt-1">Performance summary — use the filters below to narrow the date range</p>
+//       </div>
+
+//       {/* ── Date filter bar ── */}
+//       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+//         <div className="flex flex-wrap items-center gap-2">
+//           {PRESETS.map(p => (
+//             <button key={p.label} onClick={() => applyPreset(p)}
+//               className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${activePreset === p.label ? 'bg-brand-600 text-white border-brand-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+//               {p.label}
+//             </button>
+//           ))}
+//           <div className="flex items-center gap-2 ml-2">
+//             <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setActivePreset('Custom') }}
+//               className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+//             <span className="text-gray-400 text-xs">to</span>
+//             <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setActivePreset('Custom') }}
+//               className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+//             <button onClick={() => fetchAll()}
+//               className="text-xs px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-all flex items-center gap-1.5">
+//               {loading && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
+//               Apply
+//             </button>
+//           </div>
+//         </div>
+//         {(dateFrom || dateTo) && activePreset !== 'All time' && (
+//           <p className="text-xs text-gray-400 mt-2">
+//             Showing: {dateFrom || 'all'} → {dateTo || 'today'} &nbsp;·&nbsp;
+//             <button onClick={() => applyPreset(PRESETS[PRESETS.length - 1])} className="text-brand-600 hover:underline">Clear</button>
+//           </p>
+//         )}
+//       </div>
+
+//       {loading ? (
+//         <div className="flex items-center justify-center py-20">
+//           <div className="animate-spin w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full" />
+//         </div>
+//       ) : (
+//         <>
+//           {/* KPIs */}
+//           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+//             <StatCard label="Total leads given" value={formatNumber(overview?.totalLeadsGiven ?? 0)} sub="assigned to team"       icon={<Phone size={18}/>}      color="teal"   />
+//             <StatCard label="Leads worked"      value={formatNumber(overview?.totalLeads ?? 0)}      sub="across all rows"        icon={<Users size={18}/>}      color="blue"   />
+//             <StatCard label="Converted"         value={formatNumber(overview?.totalConverted ?? 0)}  sub={`${formatPercent(overview?.conversionRate ?? 0)} rate`} icon={<TrendingUp size={18}/>} color="green" />
+//             <StatCard label="Total revenue"     value={formatCurrency(overview?.totalRevenue ?? 0)}  sub="from all conversions"   icon={<DollarSign size={18}/>} color="purple" />
+//           </div>
+//           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+//             <StatCard label="Avg rev / conv"     value={formatCurrency(overview?.avgRevenuePerConversion ?? 0)} sub="per converted lead" icon={<BarChart2 size={18}/>} color="orange" />
+//             <StatCard label="Active telecallers" value={overview?.activeTelecallers ?? 0}                       sub="team members"       icon={<Users size={18}/>}    color="teal"   />
+//           </div>
+
+//           {/* Consultation split — all 4 types */}
+//           {consult.length > 0 && (
+//             <div className={`grid gap-4 mb-6 ${consult.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
+//               {consult.map((c: any) => {
+//                 const opt = CONSULT_OPTIONS.find(o => o.value === c.consultationType)
+//                 const bg  = opt?.value==='online'?'bg-blue-50 border-blue-100':opt?.value==='hospital'?'bg-orange-50 border-orange-100':opt?.value==='whatsapp'?'bg-green-50 border-green-100':'bg-purple-50 border-purple-100'
+//                 const rev = opt?.value==='online'?'text-blue-700':opt?.value==='hospital'?'text-orange-700':opt?.value==='whatsapp'?'text-green-700':'text-purple-700'
+//                 return (
+//                   <div key={c.consultationType} className={`rounded-xl border p-4 flex items-center justify-between ${bg}`}>
+//                     <div>
+//                       <p className="font-semibold text-sm text-gray-800">{opt?.icon} {opt?.label ?? c.consultationType}</p>
+//                       <p className="text-xs text-gray-500 mt-0.5">{formatNumber(c.totalLeads)} leads · {c.totalConverted} converted</p>
+//                     </div>
+//                     <p className={`text-xl font-bold ${rev}`}>{formatCurrency(c.totalRevenue)}</p>
+//                   </div>
+//                 )
+//               })}
+//             </div>
+//           )}
+
+//           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+//             {/* Revenue trend */}
+//             <Card title="Revenue & leads trend">
+//               <div className="p-4">
+//                 {trend.length === 0
+//                   ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data for this period</div>
+//                   : <ResponsiveContainer width="100%" height={220}>
+//                       <LineChart data={trend} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
+//                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+//                         <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={d => d.slice(5)} />
+//                         <YAxis yAxisId="l" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+//                         <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: '#9ca3af' }} />
+//                         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
+//                           formatter={(v: any, name: string) => [name === 'Revenue' ? formatCurrency(v) : v, name]} />
+//                         <Legend wrapperStyle={{ fontSize: 12 }} />
+//                         <Line yAxisId="l" type="monotone" dataKey="totalRevenue"   name="Revenue"   stroke="#0d9488" strokeWidth={2} dot={false} />
+//                         <Line yAxisId="r" type="monotone" dataKey="totalLeads"     name="Leads"     stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
+//                         <Line yAxisId="r" type="monotone" dataKey="totalConverted" name="Converted" stroke="#5eead4" strokeWidth={1.5} dot={false} />
+//                       </LineChart>
+//                     </ResponsiveContainer>
+//                 }
+//               </div>
+//             </Card>
+
+//             {/* Disease pie */}
+//             <Card title="Disease distribution" subtitle="By lead volume">
+//               <div className="p-4">
+//                 {diseases.length === 0
+//                   ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data yet</div>
+//                   : <ResponsiveContainer width="100%" height={220}>
+//                       <PieChart>
+//                         <Pie data={diseases} dataKey="totalLeads" nameKey="disease" cx="50%" cy="50%" outerRadius={80}
+//                           label={({ disease, percent }: any) => `${disease.split(' ')[0]} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+//                           {diseases.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+//                         </Pie>
+//                         <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }}
+//                           formatter={(v: any, _: any, props: any) => [`${v} leads · ${formatCurrency(props.payload.totalRevenue)}`, props.payload.disease]} />
+//                       </PieChart>
+//                     </ResponsiveContainer>
+//                 }
+//               </div>
+//             </Card>
+//           </div>
+
+//           {/* Disease table */}
+//           <Card title="Disease-wise performance & revenue">
+//             <div className="overflow-x-auto">
+//               <table className="w-full text-sm">
+//                 <thead>
+//                   <tr className="border-b border-gray-100 bg-gray-50">
+//                     {['Disease', 'Total leads', 'Converted', 'Conv. rate', 'Revenue', 'Avg / conv.'].map(h => (
+//                       <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
+//                     ))}
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {diseases.length === 0
+//                     ? <tr><td colSpan={6} className="text-center py-10 text-gray-400 text-sm">No data for this period</td></tr>
+//                     : diseases.map((d: any) => (
+//                         <tr key={d.disease} className="border-b border-gray-50 hover:bg-gray-50">
+//                           <td className="px-4 py-3 font-medium text-gray-900">{d.disease}</td>
+//                           <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalLeads)}</td>
+//                           <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalConverted)}</td>
+//                           <td className="px-4 py-3">
+//                             <span className={`font-semibold ${d.conversionRate >= 50 ? 'text-green-600' : d.conversionRate >= 25 ? 'text-yellow-600' : 'text-red-500'}`}>
+//                               {formatPercent(d.conversionRate)}
+//                             </span>
+//                           </td>
+//                           <td className="px-4 py-3 font-semibold text-brand-700">{formatCurrency(d.totalRevenue)}</td>
+//                           <td className="px-4 py-3 text-gray-500">{formatCurrency(d.avgRevenue)}</td>
+//                         </tr>
+//                       ))
+//                   }
+//                 </tbody>
+//               </table>
+//             </div>
+//           </Card>
+//         </>
+//       )}
+//     </div>
+//   )
+// }
+
+
+
+
+
 'use client'
 import { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts'
 import { StatCard, Card } from '@/components/ui'
 import { formatNumber, formatPercent, formatCurrency } from '@/lib/utils'
-import { CONSULT_OPTIONS } from '@/types'
-import { Phone, TrendingUp, Users, DollarSign, BarChart2 } from 'lucide-react'
-import { format, subDays, startOfWeek, startOfMonth } from 'date-fns'
+import { Phone, TrendingUp, Users, DollarSign, Monitor, Building2, BarChart2 } from 'lucide-react'
 
 const COLORS = ['#0d9488','#14b8a6','#2dd4bf','#5eead4','#99f6e0','#0f766e','#134e4a','#0891b2']
-const today = new Date()
-
-const PRESETS = [
-  { label: 'Today',        from: format(today,'yyyy-MM-dd'),                                    to: format(today,'yyyy-MM-dd') },
-  { label: 'Yesterday',    from: format(subDays(today,1),'yyyy-MM-dd'),                         to: format(subDays(today,1),'yyyy-MM-dd') },
-  { label: 'This week',    from: format(startOfWeek(today,{weekStartsOn:1}),'yyyy-MM-dd'),       to: format(today,'yyyy-MM-dd') },
-  { label: 'This month',   from: format(startOfMonth(today),'yyyy-MM-dd'),                      to: format(today,'yyyy-MM-dd') },
-  { label: 'Last 30 days', from: format(subDays(today,29),'yyyy-MM-dd'),                        to: format(today,'yyyy-MM-dd') },
-  { label: 'All time',     from: '',                                                             to: '' },
-]
 
 export default function AdminDashboard() {
-  const [activePreset, setActivePreset] = useState('All time')
-  const [dateFrom,     setDateFrom]     = useState('')
-  const [dateTo,       setDateTo]       = useState('')
-  const [overview,     setOverview]     = useState<any>(null)
-  const [diseases,     setDiseases]     = useState<any[]>([])
-  const [trend,        setTrend]        = useState<any[]>([])
-  const [consult,      setConsult]      = useState<any[]>([])
-  const [loading,      setLoading]      = useState(true)
+  const [overview,  setOverview]  = useState<any>(null)
+  const [diseases,  setDiseases]  = useState<any[]>([])
+  const [trend,     setTrend]     = useState<any[]>([])
+  const [consult,   setConsult]   = useState<any[]>([])
+  const [loading,   setLoading]   = useState(true)
 
-  function buildQS(from: string, to: string) {
-    const p = new URLSearchParams()
-    if (from) p.set('dateFrom', from)
-    if (to)   p.set('dateTo', to)
-    return p.toString()
-  }
-
-  function fetchAll(from = dateFrom, to = dateTo) {
-    setLoading(true)
-    const qs = buildQS(from, to)
-    // For trend, use the selected range or last 30 days as fallback
-    const trendFrom = from || format(subDays(today, 29), 'yyyy-MM-dd')
-    const trendQs   = buildQS(trendFrom, to || format(today, 'yyyy-MM-dd'))
+  useEffect(() => {
+    const last30 = new Date(); last30.setDate(last30.getDate() - 30)
+    const df = last30.toISOString().split('T')[0]
     Promise.all([
-      fetch(`/api/analytics?type=overview&${qs}`).then(r => r.json()),
-      fetch(`/api/analytics?type=disease&${qs}`).then(r => r.json()),
-      fetch(`/api/analytics?type=trend&${trendQs}`).then(r => r.json()),
-      fetch(`/api/analytics?type=consultationType&${qs}`).then(r => r.json()),
+      fetch('/api/analytics?type=overview').then(r => r.json()),
+      fetch('/api/analytics?type=disease').then(r => r.json()),
+      fetch(`/api/analytics?type=trend&dateFrom=${df}`).then(r => r.json()),
+      fetch('/api/analytics?type=consultationType').then(r => r.json()),
     ]).then(([ov, dis, tr, ct]) => {
       setOverview(ov.data)
       setDiseases((dis.data ?? []).slice(0, 8))
       setTrend(tr.data ?? [])
       setConsult(ct.data ?? [])
     }).finally(() => setLoading(false))
-  }
+  }, [])
 
-  useEffect(() => { fetchAll() }, []) // eslint-disable-line
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-64">
+      <div className="animate-spin w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full" />
+    </div>
+  )
 
-  function applyPreset(p: typeof PRESETS[0]) {
-    setActivePreset(p.label)
-    setDateFrom(p.from)
-    setDateTo(p.to)
-    fetchAll(p.from, p.to)
-  }
+  const onlineData  = consult.find((c: any) => c.consultationType === 'online')
+  const hospitalData = consult.find((c: any) => c.consultationType === 'hospital')
 
   return (
     <div>
-      <div className="mb-5">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
-        <p className="text-sm text-gray-500 mt-1">Performance summary — use the filters below to narrow the date range</p>
+        <p className="text-sm text-gray-500 mt-1">All-time performance across all telecallers</p>
       </div>
 
-      {/* ── Date filter bar ── */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
-        <div className="flex flex-wrap items-center gap-2">
-          {PRESETS.map(p => (
-            <button key={p.label} onClick={() => applyPreset(p)}
-              className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${activePreset === p.label ? 'bg-brand-600 text-white border-brand-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-              {p.label}
-            </button>
+      {/* KPIs row 1 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <StatCard label="Total leads given"  value={formatNumber(overview?.totalLeadsGiven ?? 0)}   sub="assigned to team"                       icon={<Phone size={18}/>}      color="teal"   />
+        <StatCard label="Leads worked"       value={formatNumber(overview?.totalLeads ?? 0)}        sub="across all disease rows"                icon={<Users size={18}/>}      color="blue"   />
+        <StatCard label="Converted"          value={formatNumber(overview?.totalConverted ?? 0)}    sub={`${formatPercent(overview?.conversionRate ?? 0)} conversion`} icon={<TrendingUp size={18}/>} color="green"  />
+        <StatCard label="Total revenue"      value={formatCurrency(overview?.totalRevenue ?? 0)}    sub="from all conversions"                   icon={<DollarSign size={18}/>} color="purple" />
+      </div>
+
+      {/* KPIs row 2 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Avg rev / conversion" value={formatCurrency(overview?.avgRevenuePerConversion ?? 0)} sub="per converted lead"  icon={<BarChart2 size={18}/>} color="orange" />
+        <StatCard label="Active telecallers"   value={overview?.activeTelecallers ?? 0}                       sub="team members"        icon={<Users size={18}/>}    color="teal"   />
+        <StatCard label="Online leads"         value={formatNumber(overview?.totalOnlineLeads ?? 0)}           sub="consultation rows"   icon={<Monitor size={18}/>}  color="blue"   />
+        <StatCard label="Hospital visits"      value={formatNumber(overview?.totalHospitalLeads ?? 0)}         sub="visit rows"          icon={<Building2 size={18}/>} color="orange" />
+      </div>
+
+      {/* Consultation split */}
+      {consult.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {[onlineData, hospitalData].filter(Boolean).map((c: any) => (
+            <div key={c.consultationType}
+              className={`rounded-xl p-5 flex items-center justify-between border ${c.consultationType === 'online' ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'}`}>
+              <div className="flex items-center gap-4">
+                <span className="text-3xl">{c.consultationType === 'online' ? '💻' : '🏥'}</span>
+                <div>
+                  <p className={`font-semibold ${c.consultationType === 'online' ? 'text-blue-800' : 'text-orange-800'}`}>
+                    {c.consultationType === 'online' ? 'Online consultations' : 'Hospital visits'}
+                  </p>
+                  <p className={`text-sm ${c.consultationType === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {formatNumber(c.totalLeads)} leads · {c.totalConverted} converted
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className={`text-2xl font-bold ${c.consultationType === 'online' ? 'text-blue-700' : 'text-orange-700'}`}>
+                  {formatCurrency(c.totalRevenue)}
+                </p>
+                <p className={`text-xs ${c.consultationType === 'online' ? 'text-blue-500' : 'text-orange-500'}`}>revenue</p>
+              </div>
+            </div>
           ))}
-          <div className="flex items-center gap-2 ml-2">
-            <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setActivePreset('Custom') }}
-              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            <span className="text-gray-400 text-xs">to</span>
-            <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setActivePreset('Custom') }}
-              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            <button onClick={() => fetchAll()}
-              className="text-xs px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-all flex items-center gap-1.5">
-              {loading && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
-              Apply
-            </button>
-          </div>
         </div>
-        {(dateFrom || dateTo) && activePreset !== 'All time' && (
-          <p className="text-xs text-gray-400 mt-2">
-            Showing: {dateFrom || 'all'} → {dateTo || 'today'} &nbsp;·&nbsp;
-            <button onClick={() => applyPreset(PRESETS[PRESETS.length - 1])} className="text-brand-600 hover:underline">Clear</button>
-          </p>
-        )}
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Revenue + leads trend */}
+        <Card title="Revenue & leads — last 30 days">
+          <div className="p-4">
+            {trend.length === 0
+              ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data yet</div>
+              : <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={trend} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={d => d.slice(5)} />
+                    <YAxis yAxisId="l" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                    <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
+                      formatter={(v: any, name: string) => [name === 'Revenue' ? formatCurrency(v) : v, name]} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Line yAxisId="l" type="monotone" dataKey="totalRevenue"   name="Revenue"    stroke="#0d9488" strokeWidth={2} dot={false} />
+                    <Line yAxisId="r" type="monotone" dataKey="totalLeads"     name="Leads"      stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
+                    <Line yAxisId="r" type="monotone" dataKey="totalConverted" name="Converted"  stroke="#5eead4" strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+            }
+          </div>
+        </Card>
+
+        {/* Disease pie */}
+        <Card title="Disease distribution" subtitle="By lead volume">
+          <div className="p-4">
+            {diseases.length === 0
+              ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data yet</div>
+              : <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={diseases} dataKey="totalLeads" nameKey="disease" cx="50%" cy="50%" outerRadius={80}
+                      label={({ disease, percent }: any) => percent >= 0.05 ? `${disease.split(' ')[0]} ${(percent * 100).toFixed(0)}%` : ''} labelLine={false}>
+                      {diseases.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                      formatter={(v: any, _: any, props: any) => [`${v} leads · ${formatCurrency(props.payload.totalRevenue)}`, props.payload.disease]} />
+                  </PieChart>
+                </ResponsiveContainer>
+            }
+          </div>
+        </Card>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full" />
+      {/* Disease table with financials */}
+      <Card title="Disease-wise performance & revenue">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                {['Disease', 'Total leads', 'Converted', 'Conv. rate', 'Online', 'Hospital', 'Revenue', 'Avg / conv.'].map(h => (
+                  <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {diseases.length === 0
+                ? <tr><td colSpan={8} className="text-center py-10 text-gray-400 text-sm">No data yet</td></tr>
+                : diseases.map((d: any) => (
+                    <tr key={d.disease} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-gray-900">{d.disease}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalLeads)}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalConverted)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`font-semibold ${d.conversionRate >= 50 ? 'text-green-600' : d.conversionRate >= 25 ? 'text-yellow-600' : 'text-red-500'}`}>
+                          {formatPercent(d.conversionRate)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-blue-600">{d.onlineLeads}</td>
+                      <td className="px-4 py-3 text-orange-600">{d.hospitalLeads}</td>
+                      <td className="px-4 py-3 font-semibold text-brand-700">{formatCurrency(d.totalRevenue)}</td>
+                      <td className="px-4 py-3 text-gray-500">{formatCurrency(d.avgRevenue)}</td>
+                    </tr>
+                  ))
+              }
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <>
-          {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <StatCard label="Total leads given" value={formatNumber(overview?.totalLeadsGiven ?? 0)} sub="assigned to team"       icon={<Phone size={18}/>}      color="teal"   />
-            <StatCard label="Leads worked"      value={formatNumber(overview?.totalLeads ?? 0)}      sub="across all rows"        icon={<Users size={18}/>}      color="blue"   />
-            <StatCard label="Converted"         value={formatNumber(overview?.totalConverted ?? 0)}  sub={`${formatPercent(overview?.conversionRate ?? 0)} rate`} icon={<TrendingUp size={18}/>} color="green" />
-            <StatCard label="Total revenue"     value={formatCurrency(overview?.totalRevenue ?? 0)}  sub="from all conversions"   icon={<DollarSign size={18}/>} color="purple" />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <StatCard label="Avg rev / conv"     value={formatCurrency(overview?.avgRevenuePerConversion ?? 0)} sub="per converted lead" icon={<BarChart2 size={18}/>} color="orange" />
-            <StatCard label="Active telecallers" value={overview?.activeTelecallers ?? 0}                       sub="team members"       icon={<Users size={18}/>}    color="teal"   />
-          </div>
-
-          {/* Consultation split — all 4 types */}
-          {consult.length > 0 && (
-            <div className={`grid gap-4 mb-6 ${consult.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4'}`}>
-              {consult.map((c: any) => {
-                const opt = CONSULT_OPTIONS.find(o => o.value === c.consultationType)
-                const bg  = opt?.value==='online'?'bg-blue-50 border-blue-100':opt?.value==='hospital'?'bg-orange-50 border-orange-100':opt?.value==='whatsapp'?'bg-green-50 border-green-100':'bg-purple-50 border-purple-100'
-                const rev = opt?.value==='online'?'text-blue-700':opt?.value==='hospital'?'text-orange-700':opt?.value==='whatsapp'?'text-green-700':'text-purple-700'
-                return (
-                  <div key={c.consultationType} className={`rounded-xl border p-4 flex items-center justify-between ${bg}`}>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-800">{opt?.icon} {opt?.label ?? c.consultationType}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{formatNumber(c.totalLeads)} leads · {c.totalConverted} converted</p>
-                    </div>
-                    <p className={`text-xl font-bold ${rev}`}>{formatCurrency(c.totalRevenue)}</p>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Revenue trend */}
-            <Card title="Revenue & leads trend">
-              <div className="p-4">
-                {trend.length === 0
-                  ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data for this period</div>
-                  : <ResponsiveContainer width="100%" height={220}>
-                      <LineChart data={trend} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={d => d.slice(5)} />
-                        <YAxis yAxisId="l" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                        <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0f0f0' }}
-                          formatter={(v: any, name: string) => [name === 'Revenue' ? formatCurrency(v) : v, name]} />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Line yAxisId="l" type="monotone" dataKey="totalRevenue"   name="Revenue"   stroke="#0d9488" strokeWidth={2} dot={false} />
-                        <Line yAxisId="r" type="monotone" dataKey="totalLeads"     name="Leads"     stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
-                        <Line yAxisId="r" type="monotone" dataKey="totalConverted" name="Converted" stroke="#5eead4" strokeWidth={1.5} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                }
-              </div>
-            </Card>
-
-            {/* Disease pie */}
-            <Card title="Disease distribution" subtitle="By lead volume">
-              <div className="p-4">
-                {diseases.length === 0
-                  ? <div className="h-52 flex items-center justify-center text-gray-400 text-sm">No data yet</div>
-                  : <ResponsiveContainer width="100%" height={220}>
-                      <PieChart>
-                        <Pie data={diseases} dataKey="totalLeads" nameKey="disease" cx="50%" cy="50%" outerRadius={80}
-                          label={({ disease, percent }: any) => `${disease.split(' ')[0]} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                          {diseases.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                        </Pie>
-                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }}
-                          formatter={(v: any, _: any, props: any) => [`${v} leads · ${formatCurrency(props.payload.totalRevenue)}`, props.payload.disease]} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                }
-              </div>
-            </Card>
-          </div>
-
-          {/* Disease table */}
-          <Card title="Disease-wise performance & revenue">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    {['Disease', 'Total leads', 'Converted', 'Conv. rate', 'Revenue', 'Avg / conv.'].map(h => (
-                      <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-4 py-3">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {diseases.length === 0
-                    ? <tr><td colSpan={6} className="text-center py-10 text-gray-400 text-sm">No data for this period</td></tr>
-                    : diseases.map((d: any) => (
-                        <tr key={d.disease} className="border-b border-gray-50 hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium text-gray-900">{d.disease}</td>
-                          <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalLeads)}</td>
-                          <td className="px-4 py-3 text-gray-600">{formatNumber(d.totalConverted)}</td>
-                          <td className="px-4 py-3">
-                            <span className={`font-semibold ${d.conversionRate >= 50 ? 'text-green-600' : d.conversionRate >= 25 ? 'text-yellow-600' : 'text-red-500'}`}>
-                              {formatPercent(d.conversionRate)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-brand-700">{formatCurrency(d.totalRevenue)}</td>
-                          <td className="px-4 py-3 text-gray-500">{formatCurrency(d.avgRevenue)}</td>
-                        </tr>
-                      ))
-                  }
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </>
-      )}
+      </Card>
     </div>
   )
 }
-
