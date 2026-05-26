@@ -705,7 +705,8 @@ import { useFieldArray, useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui'
-import { AGE_GROUPS, INDIAN_STATES, INDIAN_CITIES, todayString, formatDate, formatCurrency } from '@/lib/utils'
+import { CitySearch } from '@/components/ui/CitySearch'
+import { AGE_GROUPS, INDIAN_STATES, todayString, formatDate, formatCurrency } from '@/lib/utils'
 import { Trash2, PlusCircle, CheckCircle, Copy } from 'lucide-react'
 
 const rowSchema = z.object({
@@ -999,16 +1000,14 @@ export default function EntryPage() {
 
                     <div className="flex flex-col gap-1 flex-1" style={{ minWidth: 160, maxWidth: 220 }}>
                       <label className="text-xs font-medium text-gray-500">City *</label>
-                      <input
-                        {...register(`entries.${i}.city`)}
-                        list={`city-list-${i}`}
-                        placeholder="Search city… or N/A"
-                        autoComplete="off"
-                        className={`rounded-lg border px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.entries?.[i]?.city ? 'border-red-400' : 'border-gray-200'}`}
-                      />
-                      <datalist id={`city-list-${i}`}>
-                        {INDIAN_CITIES.map(c => <option key={c} value={c} />)}
-                      </datalist>
+                      <Controller control={control} name={`entries.${i}.city`}
+                        render={({ field }) => (
+                          <CitySearch
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={errors.entries?.[i]?.city?.message}
+                          />
+                        )} />
                       {errors.entries?.[i]?.city && <p className="text-xs text-red-500">{errors.entries[i]?.city?.message}</p>}
                     </div>
 
