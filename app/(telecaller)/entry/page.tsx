@@ -363,8 +363,8 @@ import { Trash2, PlusCircle, CheckCircle, Copy } from 'lucide-react'
 const rowSchema = z.object({
   disease:          z.string().min(1, 'Select disease'),
   ageGroup:         z.enum(['0-18', '18-35', '35-60', '60+']),
-  city:             z.string().min(1, 'City required'),
-  state:            z.string().min(1, 'State required'),
+  city:             z.string().min(1, 'City'),
+  state:            z.string().min(1, 'State'),
   consultationType: z.enum(['online', 'hospital', 'whatsapp', 'call']),
   leadsCount:       z.number({ invalid_type_error: 'Required' }).min(0),
   convertedCount:   z.number({ invalid_type_error: 'Required' }).min(0),
@@ -648,12 +648,12 @@ export default function EntryPage() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-1 flex-1" style={{ minWidth: 120, maxWidth: 180 }}>
-                      <label className="text-xs font-medium text-gray-500">City *</label>
+                      <label className="text-xs font-medium text-gray-500">City</label>
                       <input {...register(`entries.${i}.city`)} placeholder="e.g. Mumbai"
                         className={`rounded-lg border px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.entries?.[i]?.city ? 'border-red-400' : 'border-gray-200'}`} />
                     </div>
                     <div className="flex flex-col gap-1 flex-1" style={{ minWidth: 160, maxWidth: 240 }}>
-                      <label className="text-xs font-medium text-gray-500">State *</label>
+                      <label className="text-xs font-medium text-gray-500">State</label>
                       <select {...register(`entries.${i}.state`)}
                         className={`rounded-lg border px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.entries?.[i]?.state ? 'border-red-400' : 'border-gray-200'}`}>
                         <option value="">Select state…</option>
