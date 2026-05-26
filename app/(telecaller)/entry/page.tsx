@@ -899,7 +899,7 @@ export default function EntryPage() {
           {/* ── CARD-PER-ROW layout — no horizontal scroll ── */}
           <div className="space-y-3 mb-4">
             {fields.map((field, i) => (
-              <div key={field.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div key={field.id} className="bg-white rounded-xl border border-gray-100 shadow-sm">
 
                 {/* Row number + actions */}
                 <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-100">
