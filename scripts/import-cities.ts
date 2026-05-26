@@ -322,6 +322,8 @@ const CITIES: [string, string][] = [
   ['Kavaratti','Lakshadweep'],
   ['Daman','Daman & Diu'],['Diu','Daman & Diu'],
   ['Silvassa','Dadra & Nagar Haveli'],
+
+  ['Not Applicable','Not Applicable'],
 ]
 
 // ─── Seed runner ────────────────────────────────────────────────────────────
